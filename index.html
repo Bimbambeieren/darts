@@ -132,36 +132,25 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .hdr-btn.hl{border-color:var(--accent);color:var(--accent);background:rgba(232,255,71,.08);}
 .hdr-btn.hl:hover{background:var(--accent);color:#0e0f11;}
 .hdr-btn:disabled{opacity:.3;cursor:default;pointer-events:none;}
-.score-board{display:none;} /* merged into players-bar */
-.players-bar{display:grid;border-bottom:1px solid var(--border);flex-shrink:0;}
-.player-tab{min-width:0;padding:10px 12px 8px;border-right:1px solid var(--border);position:relative;transition:background .15s;display:flex;flex-direction:column;gap:3px;}
-.player-tab:last-child{border-right:none;}
-.player-tab.active-player{background:var(--surface2);}
-.player-tab.active-player::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--accent);}
-/* Top row: name + legs won */
-.pt-header{display:flex;align-items:center;justify-content:space-between;gap:4px;}
-.pt-name{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
-.active-player .pt-name{color:var(--accent);}
-.pt-legs{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--muted);flex-shrink:0;}
-.active-player .pt-legs{color:var(--accent);}
-/* Big score */
-.pt-score{font-family:'Bebas Neue',sans-serif;font-size:clamp(38px,9vw,52px);line-height:1;color:var(--text);margin-bottom:2px;}
-.active-player .pt-score{color:var(--accent);}
-/* Stats row: AVG / LAST / DARTS in one line */
-.pt-stats-row{display:flex;gap:8px;align-items:baseline;}
-.pt-stat-block{display:flex;flex-direction:column;gap:0px;}
-.pt-stat-label{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
-.pt-stat-value{font-size:12px;font-weight:700;color:var(--text);}
-.pt-stat-sep{width:1px;height:18px;background:var(--border);flex-shrink:0;align-self:center;}
-/* Throw area — checkouts pushed to bottom, just above input */
+.score-board{background:var(--surface2);border-bottom:1px solid var(--border);display:flex;flex-shrink:0;}
+.sb-player{flex:1;border-right:1px solid var(--border);padding:5px 6px;display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0;}
+.sb-player:last-child{border-right:none;}
+.sb-player.sb-active{background:rgba(232,255,71,.06);}
+.sb-name{font-size:10px;color:var(--text);text-transform:uppercase;letter-spacing:.05em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
+.sb-active .sb-name{color:var(--accent);font-weight:700;}
+.sb-num{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--text);flex-shrink:0;}
+.sb-active .sb-num{color:var(--accent);}
+
+/* Throw area — must NOT clip content under the fixed bottom-block */
 .throw-area{
   flex:1;
   display:flex;
   flex-direction:column;
-  padding:8px 12px 6px;
+  padding:10px 12px 8px;
+  /* Reserve space: numpad 40dvh + score-input 54px + 2×6px padding + 5px gap = ~73px + 40dvh */
   padding-bottom:calc(40dvh + 73px);
-  gap:6px;
-  overflow:hidden;
+  gap:8px;
+  overflow-y:auto;
   min-height:0;
 }
 .bust-label{background:var(--danger);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;border-radius:6px;padding:3px 14px;display:none;align-self:flex-start;}
@@ -238,7 +227,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .np-btn.confirm-btn:disabled{background:var(--surface2);color:var(--muted);cursor:default;transform:none;}
 
 /* Players bar — auto grid, 1 row ≤3, 2 rows for 4+ */
-
+.players-bar{display:grid;border-bottom:1px solid var(--border);flex-shrink:0;}
+.player-tab{min-width:0;padding:10px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);position:relative;transition:background .15s;}
+.player-tab:last-child{border-bottom:none;}
+.player-tab.active-player{background:var(--surface2);}
+.player-tab.active-player::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--accent);}
+.pt-score{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,8vw,44px);line-height:1;color:var(--text);margin-bottom:6px;}
+.active-player .pt-score{color:var(--accent);}
+.pt-stats-row{display:flex;flex-direction:column;gap:3px;}
+.pt-stat-line{display:flex;justify-content:space-between;align-items:center;gap:4px;}
+.pt-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.pt-stat-value{font-size:13px;font-weight:700;color:var(--text);}
 
 /* STATS OVERLAY */
 .stats-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:150;flex-direction:column;}
@@ -368,10 +367,9 @@ canvas.avg-chart{width:100%;display:block;}
   <div class="score-board" id="score-board"></div>
   <div class="players-bar" id="players-bar"></div>
   <div class="throw-area">
-    <div style="flex:1;"></div>
     <div class="score-checkout-row">
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
-        <div class="current-score-big" id="current-score-big" style="display:none;"></div>
+        <div class="current-score-big" id="current-score-big">501</div>
         <div class="remaining-preview" id="score-preview"></div>
       </div>
       <div class="checkouts-col" id="checkouts-col">
@@ -484,7 +482,6 @@ canvas.avg-chart{width:100%;display:block;}
       </div>
       <div class="toggle on" id="toggle-checkout"></div>
     </div>
-    <div id="caller-voice-name" style="font-size:10px;color:var(--muted);text-align:center;margin-top:-4px;min-height:14px;"></div>
     <button class="modal-ok" id="game-settings-close" style="margin-top:10px;">Done</button>
   </div>
 </div>
@@ -499,147 +496,166 @@ const CO = {};
   const a=(s,...r)=>{ CO[s]=r.filter(x=>x&&x.trim()!=='').slice(0,3); };
 
   a(2,"D1");
-  a(4,"D2");
-  a(6,"D3");
-  a(8,"D4");
-  a(10,"D5");
-  a(12,"D6");
-  a(14,"D7");
-  a(16,"D8");
-  a(18,"D9");
-  a(20,"D10");
-  a(22,"D11");
-  a(24,"D12");
-  a(26,"D13");
-  a(28,"D14");
-  a(30,"D15");
-  a(32,"D16");
-  a(34,"D17");
-  a(36,"D18");
-  a(38,"D19");
-  a(40,"D20");
-  a(41,"S1 D20");
-  a(42,"S2 D20");
-  a(43,"S3 D20");
-  a(44,"S4 D20");
-  a(45,"S5 D20");
-  a(46,"S6 D20");
-  a(47,"S7 D20");
-  a(48,"S8 D20");
-  a(49,"S9 D20");
-  a(50,"Bull");
-  a(51,"S11 D20");
-  a(52,"S12 D20");
-  a(53,"S13 D20");
-  a(54,"S14 D20");
-  a(55,"S15 D20");
-  a(56,"S16 D20");
-  a(57,"S17 D20");
-  a(58,"S18 D20");
-  a(59,"S19 D20");
-  a(60,"S20 D20");
-  a(61,"T15 D8");
-  a(62,"T10 D16");
-  a(63,"T13 D12");
-  a(64,"T16 D8");
-  a(65,"T19 D4");
-  a(66,"T10 D18");
-  a(67,"T17 D8");
-  a(68,"T20 D4");
-  a(69,"T15 D12");
-  a(70,"T10 D20");
-  a(71,"T13 D16");
-  a(72,"T16 D12");
-  a(73,"T19 D8");
-  a(74,"T14 D16");
-  a(75,"T17 D12");
-  a(76,"T20 D8");
-  a(77,"T19 D10");
-  a(78,"T18 D12");
-  a(79,"T13 D20");
-  a(80,"T20 D10");
-  a(81,"T19 D12");
-  a(82,"T14 D20");
-  a(83,"T17 D16");
-  a(84,"T20 D12");
-  a(85,"T15 D20");
-  a(86,"T18 D16");
-  a(87,"T17 D18");
-  a(88,"T16 D20");
-  a(89,"T19 D16");
-  a(90,"T20 D15");
-  a(91,"T17 D20");
-  a(92,"T20 D16");
-  a(93,"T19 D18");
-  a(94,"T18 D20");
-  a(95,"T19 D19");
-  a(96,"T20 D18");
-  a(97,"T19 D20");
-  a(98,"T20 D19");
-  a(99,"T19 S10 D16");
-  a(100,"T20 D20");
-  a(101,"T20 S1 D20");
-  a(102,"T20 S10 D16");
-  a(103,"T20 S3 D20");
-  a(104,"T18 S18 D16");
-  a(105,"T19 S16 D16");
-  a(106,"T20 S14 D16");
-  a(107,"T19 S18 D16");
-  a(108,"T20 S16 D16");
-  a(109,"T19 S20 D16");
-  a(110,"T20 S18 D16");
-  a(111,"T20 S19 D16");
-  a(112,"T20 S12 D20");
-  a(113,"T20 S13 D20");
-  a(114,"T20 S14 D20");
-  a(115,"T20 S15 D20");
-  a(116,"T20 S16 D20");
-  a(117,"T20 S17 D20");
-  a(118,"T20 S18 D20");
-  a(119,"T19 T10 D16");
-  a(120,"T20 S20 D20");
-  a(121,"T17 T10 D20");
-  a(122,"T18 T20 D4");
-  a(123,"T19 T16 D9");
-  a(124,"T20 T16 D8");
-  a(125,"S25 T20 D20");
-  a(126,"T19 T19 D6");
-  a(127,"T20 T17 D8");
-  a(128,"T18 T14 D16");
-  a(129,"T19 T16 D12");
-  a(130,"T20 S20 Bull");
-  a(131,"T20 T13 D16");
-  a(132,"T20 T16 D12");
-  a(133,"T20 T19 D8");
-  a(134,"T20 T14 D16");
-  a(135,"T20 T17 D12");
-  a(136,"T20 T20 D8");
-  a(137,"T19 T16 D16");
-  a(138,"T20 T18 D12");
-  a(139,"T19 T14 D20");
-  a(140,"T20 T16 D16");
-  a(141,"T20 T19 D12");
-  a(142,"T20 T14 D20");
-  a(143,"T20 T17 D16");
-  a(144,"T20 T20 D12");
-  a(145,"T20 T15 D20");
-  a(146,"T20 T18 D16");
-  a(147,"T20 T17 D18");
-  a(148,"T20 T16 D20");
-  a(149,"T20 T19 D16");
-  a(150,"T20 T18 D18");
-  a(151,"T20 T17 D20");
-  a(152,"T20 T20 D16");
-  a(153,"T20 T19 D18");
-  a(154,"T20 T18 D20");
-  a(155,"T20 T19 D19");
+  a(3,"S1 D1");
+  a(4,"D2","S2 D1");
+  a(5,"S1 D2","S3 D1","T1 D1");
+  a(6,"D3","S2 D2","S4 D1");
+  a(7,"S3 D2","S5 D1","S1 D3");
+  a(8,"D4","S4 D2","S6 D1");
+  a(9,"S1 D4","S5 D2","S7 D1");
+  a(10,"D5","S2 D4","S6 D2");
+  a(11,"S3 D4","S7 D2","S9 D1");
+  a(12,"D6","S4 D4","S8 D2");
+  a(13,"S1 D6","S5 D4","S9 D2");
+  a(14,"D7","S2 D6","S6 D4");
+  a(15,"S3 D6","S7 D4","S11 D2");
+  a(16,"D8","S4 D6","S8 D4");
+  a(17,"S1 D8","S5 D6","S9 D4");
+  a(18,"D9","S2 D8","S6 D6");
+  a(19,"S3 D8","S7 D6","S11 D4");
+  a(20,"D10","S4 D8","S8 D6");
+  a(21,"S1 D10","S5 D8","S9 D6");
+  a(22,"D11","S2 D10","S6 D8");
+  a(23,"S3 D10","S7 D8","S11 D6");
+  a(24,"D12","S4 D10","S8 D8");
+  a(25,"S5 D10","S9 D8","S1 D12");
+  a(26,"D13","S6 D10","S10 D8");
+  a(27,"S7 D10","S11 D8","S3 D12");
+  a(28,"D14","S8 D10","S12 D8");
+  a(29,"S9 D10","S13 D8","S5 D12");
+  a(30,"D15","S10 D10","S14 D8");
+  a(31,"S11 D10","S15 D8","S7 D12");
+  a(32,"D16","S12 D10","S16 D8");
+  a(33,"S1 D16","S13 D10","S17 D8");
+  a(34,"D17","S2 D16","S14 D10");
+  a(35,"S3 D16","S15 D10","S19 D8");
+  a(36,"D18","S4 D16","S16 D10");
+  a(37,"S5 D16","S1 D18","S17 D10");
+  a(38,"D19","S6 D16","S2 D18");
+  a(39,"S7 D16","S3 D18","S19 D10");
+  a(40,"D20","S8 D16","S4 D18");
+  a(41,"S1 D20","S9 D16","S5 D18");
+  a(42,"S2 D20","S10 D16","S6 D18");
+  a(43,"S3 D20","S11 D16","S7 D18");
+  a(44,"S4 D20","S12 D16","S8 D18");
+  a(45,"S5 D20","S13 D16","S9 D18");
+  a(46,"S6 D20","S14 D16","S10 D18");
+  a(47,"S7 D20","S15 D16","S11 D18");
+  a(48,"S8 D20","S16 D16","S12 D18");
+  a(49,"S9 D20","S17 D16","S13 D18");
+  a(50,"Bull","S10 D20","S18 D16");
+  a(51,"S11 D20","S19 D16","S15 D18");
+  a(52,"S12 D20","S20 D16","S16 D18");
+  a(53,"S13 D20","S17 D18","S3 Bull");
+  a(54,"S14 D20","S18 D18","S4 Bull");
+  a(55,"S15 D20","S19 D18","S5 Bull");
+  a(56,"S16 D20","S20 D18","S6 Bull");
+  a(57,"S17 D20","S7 Bull","S19 D19");
+  a(58,"S18 D20","S8 Bull","S20 D19");
+  a(59,"S19 D20","S9 Bull","T9 D16");
+  a(60,"S20 D20","S10 Bull","T8 D18");
+  a(61,"S11 Bull","T7 D20","T15 D8");
+  a(62,"S12 Bull","T10 D16","T14 D10");
+  a(63,"S13 Bull","T9 D18","T13 D12");
+  a(64,"S14 Bull","T8 D20","T16 D8");
+  a(65,"S15 Bull","T11 D16","T15 D10");
+  a(66,"S16 Bull","T10 D18","T14 D12");
+  a(67,"S17 Bull","T9 D20","T17 D8");
+  a(68,"S18 Bull","T12 D16","T16 D10");
+  a(69,"S19 Bull","T11 D18","T15 D12");
+  a(70,"S20 Bull","T10 D20","T18 D8");
+  a(71,"T13 D16","T17 D10","T7 Bull");
+  a(72,"T12 D18","T16 D12","T14 D15");
+  a(73,"T11 D20","T19 D8","T15 D14");
+  a(74,"T14 D16","T18 D10","T8 Bull");
+  a(75,"T13 D18","T17 D12","T15 D15");
+  a(76,"T12 D20","T20 D8","T16 D14");
+  a(77,"T15 D16","T19 D10","T9 Bull");
+  a(78,"T14 D18","T18 D12","T16 D15");
+  a(79,"T13 D20","T17 D14","T19 D11");
+  a(80,"T16 D16","T20 D10","T10 Bull");
+  a(81,"T15 D18","T19 D12","T17 D15");
+  a(82,"T14 D20","T18 D14","T20 D11");
+  a(83,"T17 D16","T11 Bull","T19 D13");
+  a(84,"T16 D18","T20 D12","T18 D15");
+  a(85,"T15 D20","T19 D14","T17 D17");
+  a(86,"T18 D16","T12 Bull","T20 D13");
+  a(87,"T17 D18","T19 D15","T20 S7 D10");
+  a(88,"T16 D20","T20 D14","T18 D17");
+  a(89,"T19 D16","T13 Bull","T17 D19");
+  a(90,"T18 D18","T20 D15","T20 S10 D10");
+  a(91,"T17 D20","T19 D17","T20 S11 D10");
+  a(92,"T20 D16","T14 Bull","T18 D19");
+  a(93,"T19 D18","T20 S1 D16","T20 S13 D10");
+  a(94,"T18 D20","T20 D17","T20 S2 D16");
+  a(95,"T15 Bull","T19 D19","T20 S3 D16");
+  a(96,"T20 D18","T20 S4 D16","T20 S16 D10");
+  a(97,"T19 D20","T20 S5 D16","T20 S1 D18");
+  a(98,"T16 Bull","T20 D19","T20 S6 D16");
+  a(99,"T20 S7 D16","T20 S3 D18","T20 S19 D10");
+  a(100,"T20 D20","T20 S8 D16","T20 S4 D18");
+  a(101,"T17 Bull","T20 S1 D20","T20 S9 D16");
+  a(102,"T20 S2 D20","T20 S10 D16","T20 S6 D18");
+  a(103,"T20 S3 D20","T20 S11 D16","T20 S7 D18");
+  a(104,"T18 Bull","T20 S4 D20","T20 S12 D16");
+  a(105,"T20 S5 D20","T20 S13 D16","T20 S9 D18");
+  a(106,"T20 S6 D20","T20 S14 D16","T20 S10 D18");
+  a(107,"T19 Bull","T20 S7 D20","T20 S15 D16");
+  a(108,"T20 S8 D20","T20 S16 D16","T20 S12 D18");
+  a(109,"T20 S9 D20","T20 S17 D16","T20 S13 D18");
+  a(110,"T20 Bull","T20 S10 D20","T20 S18 D16");
+  a(111,"T20 S11 D20","T20 S19 D16","T20 S15 D18");
+  a(112,"T20 S12 D20","T20 S20 D16","T20 S16 D18");
+  a(113,"T20 S13 D20","T20 S17 D18","T20 S3 Bull");
+  a(114,"T20 S14 D20","T20 S18 D18","T20 S4 Bull");
+  a(115,"T20 S15 D20","T20 S19 D18","T20 S5 Bull");
+  a(116,"T20 S16 D20","T20 S20 D18","T20 S6 Bull");
+  a(117,"T20 S17 D20","T20 S7 Bull","T20 S19 D19");
+  a(118,"T20 S18 D20","T20 S8 Bull","T20 S20 D19");
+  a(119,"T20 S19 D20","T20 S9 Bull","T19 S12 Bull");
+  a(120,"T20 S20 D20","T20 S10 Bull","T19 S13 Bull");
+  a(121,"T20 S11 Bull","T19 S14 Bull","T18 S17 Bull");
+  a(122,"T20 S12 Bull","T19 S15 Bull","T18 S18 Bull");
+  a(123,"T20 S13 Bull","T19 S16 Bull","T18 S19 Bull");
+  a(124,"T20 S14 Bull","T19 S17 Bull","T18 S20 Bull");
+  a(125,"T20 S15 Bull","T19 S18 Bull","T20 T15 D10");
+  a(126,"T20 S16 Bull","T19 S19 Bull","T20 T14 D12");
+  a(127,"T20 S17 Bull","T19 S20 Bull","T20 T17 D8");
+  a(128,"T20 S18 Bull","T20 T16 D10","T20 T12 D16");
+  a(129,"T20 S19 Bull","T20 T15 D12","T20 T13 D15");
+  a(130,"T20 S20 Bull","T20 T18 D8","T20 T14 D14");
+  a(131,"T20 T17 D10","T20 T13 D16","T20 T7 Bull");
+  a(132,"T20 T16 D12","T20 T14 D15","T20 T12 D18");
+  a(133,"T20 T19 D8","T20 T15 D14","T20 T11 D20");
+  a(134,"T20 T18 D10","T20 T14 D16","T20 T8 Bull");
+  a(135,"T20 T17 D12","T20 T15 D15","T20 T13 D18");
+  a(136,"T20 T20 D8","T20 T16 D14","T20 T12 D20");
+  a(137,"T20 T19 D10","T20 T15 D16","T20 T9 Bull");
+  a(138,"T20 T18 D12","T20 T16 D15","T20 T14 D18");
+  a(139,"T20 T17 D14","T20 T13 D20","T19 T18 D14");
+  a(140,"T20 T20 D10","T20 T16 D16","T20 T10 Bull");
+  a(141,"T20 T19 D12","T20 T17 D15","T20 T15 D18");
+  a(142,"T20 T18 D14","T20 T14 D20","T19 T19 D14");
+  a(143,"T20 T17 D16","T20 T11 Bull","T19 T18 D16");
+  a(144,"T20 T20 D12","T20 T18 D15","T20 T16 D18");
+  a(145,"T20 T19 D14","T20 T15 D20","T19 T20 D14");
+  a(146,"T20 T18 D16","T20 T12 Bull","T19 T19 D16");
+  a(147,"T20 T19 D15","T20 T17 D18","T19 T20 D15");
+  a(148,"T20 T20 D14","T20 T16 D20","T19 T17 D20");
+  a(149,"T20 T19 D16","T20 T13 Bull","T19 T20 D16");
+  a(150,"T20 T20 D15","T20 T18 D18","T19 T19 D18");
+  a(151,"T20 T17 D20","T19 T18 D20","T18 T19 D20");
+  a(152,"T20 T20 D16","T20 T14 Bull","T19 T15 Bull");
+  a(153,"T20 T19 D18","T19 T20 D18");
+  a(154,"T20 T18 D20","T19 T19 D20","T18 T20 D20");
+  a(155,"T20 T15 Bull","T19 T16 Bull","T18 T17 Bull");
   a(156,"T20 T20 D18");
-  a(157,"T20 T19 D20");
-  a(158,"T20 T20 D19");
+  a(157,"T20 T19 D20","T19 T20 D20");
+  a(158,"T20 T16 Bull","T19 T17 Bull","T18 T18 Bull");
   a(160,"T20 T20 D20");
-  a(161,"T20 T17 Bull");
-  a(164,"T20 T18 Bull");
-  a(167,"T20 T19 Bull");
+  a(161,"T20 T17 Bull","T19 T18 Bull","T18 T19 Bull");
+  a(164,"T20 T18 Bull","T19 T19 Bull","T18 T20 Bull");
+  a(167,"T20 T19 Bull","T19 T20 Bull");
   a(170,"T20 T20 Bull");
 })();
 
@@ -754,32 +770,10 @@ let _speechVoice=null;
   if(!window.speechSynthesis)return;
   const pick=()=>{
     const v=window.speechSynthesis.getVoices();
-    if(!v.length)return;
-    // Priority order — best darts caller voices first:
-    // 1. Google Neural2 UK male (deep, authoritative)
-    // 2. Google UK male voices
-    // 3. Known deep UK males (Daniel, George)
-    // 4. Any en-GB voice
-    // 5. Any English voice
-    _speechVoice =
-      v.find(x=>x.name==='Google UK English Male') ||
-      v.find(x=>/Neural2-B/i.test(x.name)&&x.lang.startsWith('en')) ||
-      v.find(x=>/Neural2-D/i.test(x.name)&&x.lang.startsWith('en')) ||
-      v.find(x=>/Neural2/i.test(x.name)&&x.lang==='en-GB') ||
-      v.find(x=>/Neural2/i.test(x.name)&&x.lang.startsWith('en')) ||
-      v.find(x=>/daniel|george/i.test(x.name)&&x.lang.startsWith('en')) ||
-      v.find(x=>x.lang==='en-GB'&&!x.name.toLowerCase().includes('female')) ||
-      v.find(x=>x.lang==='en-GB') ||
-      v.find(x=>x.lang.startsWith('en'))||null;
+    _speechVoice=v.find(x=>/daniel|george/i.test(x.name)&&x.lang.startsWith('en'))
+      ||v.find(x=>x.lang==='en-GB')||v.find(x=>x.lang.startsWith('en'))||null;
   };
-  pick();
-  window.speechSynthesis.onvoiceschanged=pick;
-  // On Android, voices sometimes load late — retry a few times
-  let tries=0;
-  const retry=setInterval(()=>{
-    if(_speechVoice||tries++>5)clearInterval(retry);
-    else pick();
-  },500);
+  pick(); window.speechSynthesis.onvoiceschanged=pick;
 })();
 
 // ── Public speak helpers ───────────────────────────────────────────
@@ -1095,10 +1089,7 @@ function addToBucket(st,lst,scored){
   }
 }
 
-function show(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));
-  if(id==='setup-screen')clearSession();
-}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));}
 
 document.getElementById('home-btn').addEventListener('click',()=>document.getElementById('home-modal').classList.add('open'));
 document.getElementById('home-cancel-btn').addEventListener('click',()=>document.getElementById('home-modal').classList.remove('open'));
@@ -1130,59 +1121,9 @@ function loadAppSettings(){
 }
 loadAppSettings();
 
-/* ═══════════════════════════════════════
-   SESSION PERSISTENCE
-   Saves active game to localStorage so it survives app switching.
-═══════════════════════════════════════ */
-const SESSION_KEY='darts_session_v1';
-
-function saveSession(){
-  if(!gs||!gs.scores)return;
-  try{
-    localStorage.setItem(SESSION_KEY,JSON.stringify({
-      gs:JSON.parse(JSON.stringify(gs)),
-      players,settings,showCheckout,
-      undoStack,inputBuf,
-      screen:document.querySelector('.screen.active')?.id||'game-screen'
-    }));
-  }catch(e){}
-}
-
-function clearSession(){
-  localStorage.removeItem(SESSION_KEY);
-}
-
-function restoreSession(){
-  try{
-    const raw=localStorage.getItem(SESSION_KEY);
-    if(!raw)return false;
-    const d=JSON.parse(raw);
-    if(!d.gs||!d.gs.scores)return false;
-    gs=d.gs;players=d.players;settings=d.settings;
-    showCheckout=d.showCheckout;undoStack=d.undoStack||[];inputBuf=d.inputBuf||'';
-    renderPlayerList();
-    show(d.screen||'game-screen');
-    renderGame();
-    return true;
-  }catch(e){return false;}
-}
-
-// Save immediately when user leaves the app
-document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='hidden')saveSession();
-});
-window.addEventListener('pagehide',saveSession);
-
-// Restore session on load if a game was in progress
-if(!restoreSession()){
-  renderSavedGames();
-}
-
 document.getElementById('game-settings-btn').addEventListener('click',()=>{
   document.getElementById('caller-toggle').className='toggle'+(callerEnabled?' on':'');
   document.getElementById('toggle-checkout').className='toggle'+(showCheckout?' on':'');
-  const vn=document.getElementById('caller-voice-name');
-  if(vn)vn.textContent=_speechVoice?'Voice: '+_speechVoice.name:'Voice: Web Speech (default)';
   document.getElementById('game-settings-modal').classList.add('open');
 });
 document.getElementById('caller-toggle').addEventListener('click',function(){
@@ -1229,8 +1170,16 @@ function renderGame(){
   document.getElementById('leg-sublabel').textContent=modeLabel;
   document.getElementById('undo-pad-btn').disabled=undoStack.length===0;
 
-  // Players bar — merged with score-board: name + legs + big score + stats
-  const sb=document.getElementById('score-board');sb.innerHTML=''; // hidden, kept for compatibility
+  // Score board — name + legs won number, no dots
+  const sb=document.getElementById('score-board');sb.innerHTML='';
+  players.forEach((p,i)=>{
+    const div=document.createElement('div');div.className='sb-player'+(i===cp?' sb-active':'');
+    const won=settings.unit==='sets'?gs.setsWon[i]:gs.legsWon[i];
+    div.innerHTML=`<span class="sb-name">${p.name}</span><span class="sb-num">${won}</span>`;
+    sb.appendChild(div);
+  });
+
+  // Players bar — 1 row for ≤3 players, 2 rows (2 cols) for 4+
   const bar=document.getElementById('players-bar');bar.innerHTML='';
   const cols=players.length<=3?players.length:2;
   bar.style.gridTemplateColumns=`repeat(${cols},1fr)`;
@@ -1239,19 +1188,11 @@ function renderGame(){
     const st=gs.stats[i];
     const avg=st.dartsThrown>0?((st.totalScored/st.dartsThrown)*3).toFixed(1):'0.0';
     const last=gs.lastScore[i]!==null?gs.lastScore[i]:'—';
-    const won=settings.unit==='sets'?gs.setsWon[i]:gs.legsWon[i];
-    tab.innerHTML=`
-      <div class="pt-header">
-        <span class="pt-name">${p.name}</span>
-        <span class="pt-legs">${won}</span>
-      </div>
-      <div class="pt-score">${gs.scores[i]}</div>
+    tab.innerHTML=`<div class="pt-score">${gs.scores[i]}</div>
       <div class="pt-stats-row">
-        <div class="pt-stat-block"><div class="pt-stat-label">AVG</div><div class="pt-stat-value">${avg}</div></div>
-        <div class="pt-stat-sep"></div>
-        <div class="pt-stat-block"><div class="pt-stat-label">LAST</div><div class="pt-stat-value">${last}</div></div>
-        <div class="pt-stat-sep"></div>
-        <div class="pt-stat-block"><div class="pt-stat-label">DARTS</div><div class="pt-stat-value">${st.dartsThrown}</div></div>
+        <div class="pt-stat-line"><span class="pt-stat-label">AVG</span><span class="pt-stat-value">${avg}</span></div>
+        <div class="pt-stat-line"><span class="pt-stat-label">LAST</span><span class="pt-stat-value">${last}</span></div>
+        <div class="pt-stat-line"><span class="pt-stat-label">DARTS</span><span class="pt-stat-value">${st.dartsThrown}</span></div>
       </div>`;
     bar.appendChild(tab);
   });
@@ -1288,7 +1229,6 @@ function renderGame(){
     else prev.innerHTML=`<span style="color:var(--danger);font-weight:700;font-size:15px;">BUST</span>`;
   }else prev.innerHTML='';
   document.getElementById('confirm-btn').disabled=!inputBuf;
-  saveSession();
 }
 
 /* ═══════════════════════════════════════
