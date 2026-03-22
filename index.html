@@ -360,7 +360,7 @@ canvas.avg-chart{width:100%;display:block;}
       <div class="leg-sublabel" id="leg-sublabel"></div>
     </div>
     <div class="hdr-right">
-      <button class="hdr-btn hl" id="stats-btn">📊 Stats</button>
+      <button class="hdr-btn hl" id="stats-btn"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg"><polyline points="1,13 5,7 8,10 12,3 17,1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button>
       <button class="hdr-btn hl" id="game-settings-btn">⚙</button>
     </div>
   </div>
@@ -598,78 +598,70 @@ const CO = {};
   a(63,"T13 D12","T17 D6","T7 D16");
   a(62,"T10 D16","T14 D10","T6 D14");
   // 2-dart routes (61–41)
-  a(61,"T15 D8","T7 D20","T13 D11");
-  a(60,"S20 D20","T12 D12","T4 D24");// only valid ones
-  a(60,"S20 D20","T12 D12","S8 D26");// D26 not valid
+  a(61,"T15 D8","T7 D20","T11 D14");
+  a(60,"S20 D20","T12 D12","S8 D26");
   a(60,"S20 D20","T12 D12");
   a(59,"S19 D20","T7 D19","S3 D28");
   a(59,"S19 D20","T7 D19");
-  a(58,"S18 D20","Bull D4","T2 D26");
   a(58,"S18 D20","Bull D4");
-  a(57,"S17 D20","S9 D24","S1 D28");
   a(57,"S17 D20","Bull D3");
-  a(56,"S16 D20","Bull D3","T8 D16");
   a(56,"S16 D20","T8 D16","Bull D3");
-  a(55,"S15 D20","S7 D24","S3 D26");
+  a(56,"S16 D20","T8 D16");
   a(55,"S15 D20","Bull D2");
-  a(54,"S14 D20","Bull D2","S6 D24");
   a(54,"S14 D20","Bull D2");
-  a(53,"S13 D20","S5 D24","S1 D26");
   a(53,"S13 D20","Bull D1");
-  a(52,"S12 D20","S20 D16","S4 D24");
   a(52,"S12 D20","S20 D16");
-  a(51,"S11 D20","S19 D16","S3 D24");
   a(51,"S11 D20","S19 D16");
   a(50,"Bull","S18 D16","S10 D20");
-  a(49,"S9 D20","S17 D16","S1 D24");
   a(49,"S9 D20","S17 D16");
-  a(48,"S8 D20","S16 D16","S8 D20");
   a(48,"S8 D20","S16 D16");
-  a(47,"S7 D20","S15 D16","S7 D20");
   a(47,"S7 D20","S15 D16");
-  a(46,"S6 D20","S14 D16","S6 D20");
   a(46,"S6 D20","S14 D16");
-  a(45,"S5 D20","S13 D16","S5 D20");
   a(45,"S5 D20","S13 D16");
-  a(44,"S4 D20","S12 D16","S4 D20");
   a(44,"S4 D20","S12 D16");
-  a(43,"S3 D20","S11 D16","S3 D20");
   a(43,"S3 D20","S11 D16");
-  a(42,"S10 D16","S2 D20","S10 D16");
   a(42,"S10 D16","S2 D20");
-  a(41,"S9 D16","S1 D20","S9 D16");
   a(41,"S9 D16","S1 D20");
-  // 1-dart routes (40 down to 2)
-  a(40,"D20","D16","S8 D16");
-  a(40,"D20","D16");
-  a(39,"S7 D16","S3 D18","S7 D16");
+  // 1-dart finishes (40 down to 2)
+  a(40,"D20","S8 D16","S16 D12");
   a(39,"S7 D16","S3 D18");
   a(38,"D19","S6 D16","S2 D18");
-  a(38,"D19","S6 D16");
-  a(37,"S5 D16","S1 D18","S5 D16");
   a(37,"S5 D16","S1 D18");
-  a(36,"D18","S4 D16","D16");
+  a(36,"D18","S4 D16","S2 D17");
   a(35,"S3 D16","S1 D17","S19 D8");
   a(34,"D17","S2 D16","S6 D14");
   a(33,"S1 D16","S9 D12","S17 D8");
   a(32,"D16","S16 D8","S8 D12");
   a(31,"S7 D12","S1 D15","S15 D8");
   a(30,"D15","S6 D12","S14 D8");
+  a(29,"S9 D10","S13 D8","S3 D13");
   a(28,"D14","S12 D8","S4 D12");
   a(27,"S3 D12","S11 D8","S7 D10");
   a(26,"D13","S10 D8","S6 D10");
   a(25,"S9 D8","S1 D12","S5 D10");
   a(24,"D12","S8 D8","S4 D10");
+  a(23,"S7 D8","S3 D10","S1 D11");
   a(22,"D11","S6 D8","S2 D10");
-  a(20,"D10","S4 D8","S10 D5");
+  a(21,"S5 D8","S1 D10","S3 D9");
+  a(20,"D10","S4 D8","S12 D4");
+  a(19,"S3 D8","S1 D9","S7 D6");
   a(18,"D9","S2 D8","S6 D6");
-  a(16,"D8","S8 D4","S6 D5");
-  a(14,"D7","S6 D4","S4 D5");
+  a(17,"S1 D8","S5 D6","S7 D5");
+  a(16,"D8","S8 D4","S4 D6");
+  a(15,"S7 D4","S1 D7","S3 D6");
+  a(14,"D7","S6 D4","S2 D6");
+  a(13,"S5 D4","S1 D6","S3 D5");
   a(12,"D6","S4 D4","S2 D5");
+  a(11,"S3 D4","S1 D5","S5 D3");
   a(10,"D5","S2 D4","S4 D3");
+  a(9,"S1 D4","S3 D3","S5 D2");
   a(8,"D4","S4 D2","S2 D3");
+  a(7,"S3 D2","S1 D3","S5 D1");
   a(6,"D3","S2 D2","S4 D1");
-  a(4,"D2","S2 D1","S4 D0");
+  a(5,"S1 D2","S3 D1");
+  a(4,"D2","S2 D1");
+  a(3,"S1 D1","S3 D0");
+  a(3,"S1 D1");
   a(2,"D1");
 })();
 
@@ -1453,7 +1445,7 @@ function renderStats(scope){
     const col=COLS[i%COLS.length];
     return`<div class="st-row${i===gs.cpIdx?' active-row':''}">
       <div class="st-td name-td" style="color:${col};">${p.name}</div>
-      <div class="st-td hl">${avg}</div>
+      <div class="st-td hl" style="color:${col};">${avg}</div>
       <div class="st-td">${f9}</div>
       <div class="st-td">${d.hc||'—'}</div>
       <div class="st-td">${d.hs||'—'}</div>
