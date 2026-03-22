@@ -1506,7 +1506,29 @@ function renderStats(scope){
   </div>`+players.map((p,i)=>{
     const d=getSD(scope,i);if(!d)return'';
     const avg=d.darts>0?((d.scored/d.darts)*3).toFixed(1):'—';
-    const f9=d.f9.length>0?(d.f9.slice(0,3).reduce((a,b)=>a+b,0)/Math.min(d.f9.length,3)).toFixed(1):'—';
+    // First 9 avg: for match = avg of per-leg first9 averages (completed legs + current)
+    let f9;
+    if(scope==='match'){
+      const legAvgs=[];
+      // Completed legs
+      const st=gs.stats[i];
+      st.legHistory.forEach(lh=>{
+        const scores=lh.first9Scores||[];
+        if(scores.length>0){
+          const legF9=scores.slice(0,3).reduce((a,b)=>a+b,0)/Math.min(scores.length,3);
+          legAvgs.push(legF9);
+        }
+      });
+      // Current leg
+      const lst=gs.legStats[i];
+      if(lst.first9Scores&&lst.first9Scores.length>0){
+        const cur=lst.first9Scores.slice(0,3).reduce((a,b)=>a+b,0)/Math.min(lst.first9Scores.length,3);
+        legAvgs.push(cur);
+      }
+      f9=legAvgs.length>0?(legAvgs.reduce((a,b)=>a+b,0)/legAvgs.length).toFixed(1):'—';
+    } else {
+      f9=d.f9.length>0?(d.f9.slice(0,3).reduce((a,b)=>a+b,0)/Math.min(d.f9.length,3)).toFixed(1):'—';
+    }
     const COLS=['#e8ff47','#44ff88','#ff6b35','#44aaff','#ff44aa','#cc44ff','#ffcc00','#ff4488'];
     const col=COLS[i%COLS.length];
     return`<div class="st-row${i===gs.cpIdx?' active-row':''}">
