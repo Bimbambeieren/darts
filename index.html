@@ -366,14 +366,14 @@ canvas.avg-chart{width:100%;display:block;}
 <!-- GAME -->
 <div id="game-screen" class="screen">
   <div class="game-header">
-    <div class="hdr-left"><button class="hdr-btn" id="home-btn">🏠 Home</button></div>
+    <div class="hdr-left"><button class="hdr-btn hl" id="home-btn">🏠 Home</button></div>
     <div class="hdr-center">
       <div class="leg-display" id="leg-display">Leg 1</div>
       <div class="leg-sublabel" id="leg-sublabel"></div>
     </div>
     <div class="hdr-right">
       <button class="hdr-btn hl" id="stats-btn">📊 Stats</button>
-      <button class="hdr-btn" id="game-settings-btn">⚙ Settings</button>
+      <button class="hdr-btn hl" id="game-settings-btn">⚙</button>
     </div>
   </div>
   <div class="score-board" id="score-board"></div>
@@ -946,12 +946,13 @@ function renderPlayerList(){
       <button class="player-hc-btn${p.handicap!==null?' has-hc':''}">HC</button>
       <span class="player-drag-handle">⠿</span>
       ${players.length>2?`<button class="player-remove">✕</button>`:''}`;
-    row.querySelector('.player-name-input').addEventListener('input',e=>{players[i].name=e.target.value||`Player ${i+1}`;});
+    row.querySelector('.player-name-input').addEventListener('input',e=>{players[i].name=e.target.value||`Player ${i+1}`;saveLastPlayers();});
     row.querySelector('.player-name-input').addEventListener('keydown',e=>{
       if(e.key==='Enter'){
         e.preventDefault();
         players[i].name=e.target.value||`Player ${i+1}`;
-        e.target.blur(); // dismisses keyboard on mobile
+        saveLastPlayers();
+        e.target.blur();
       }
     });
     row.querySelector('.player-hc-btn').addEventListener('click',e=>{e.stopPropagation();openHcModal(i);});
@@ -1018,19 +1019,36 @@ document.getElementById('hc-ok').addEventListener('click',()=>{
    MULTI-GAME SAVE SYSTEM
 ═══════════════════════════════════════ */
 const SAVES_KEY='darts_saves_v2';
+const PLAYERS_KEY='darts_last_players';
 function loadSaves(){try{return JSON.parse(localStorage.getItem(SAVES_KEY))||[];}catch{return[];}}
 function writeSaves(arr){localStorage.setItem(SAVES_KEY,JSON.stringify(arr));}
 
+// Remember last used player names
+function saveLastPlayers(){localStorage.setItem(PLAYERS_KEY,JSON.stringify(players.map(p=>({name:p.name,handicap:p.handicap}))));}
+function loadLastPlayers(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(PLAYERS_KEY));
+    if(saved&&saved.length>=2){players=saved;renderPlayerList();}
+  }catch(e){}
+}
+loadLastPlayers();
+
 function saveCurrentGame(){
   const saves=loadSaves();
-  const id=Date.now();
   const now=new Date();
   const dateStr=now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
   const timeStr=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   const playerNames=players.map(p=>p.name).join(' vs ');
   const legInfo=settings.unit==='sets'?`Set ${gs.currentSet} · Leg ${gs.currentLeg}`:`Leg ${gs.currentLeg}`;
-  saves.unshift({id,savedAt:`${dateStr} ${timeStr}`,playerNames,legInfo,points:settings.points,data:{players,settings,showCheckout,gs:JSON.parse(JSON.stringify(gs)),undoStack}});
-  if(saves.length>10)saves.length=10; // keep max 10
+  // Use existing save ID if this game was already saved, otherwise create new
+  const existingId=gs._saveId||null;
+  const id=existingId||Date.now();
+  gs._saveId=id; // remember the ID for future overwrites
+  const entry={id,savedAt:`${dateStr} ${timeStr}`,playerNames,legInfo,points:settings.points,data:{players,settings,showCheckout,gs:JSON.parse(JSON.stringify(gs)),undoStack}};
+  const idx=saves.findIndex(s=>s.id===id);
+  if(idx>=0) saves[idx]=entry; // overwrite existing
+  else saves.unshift(entry);   // new save
+  if(saves.length>10)saves.length=10;
   writeSaves(saves);
 }
 
