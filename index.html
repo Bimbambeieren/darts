@@ -161,18 +161,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 /* Score — always large, fixed size */
 .current-score-big{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,13vw,80px);line-height:1;color:var(--text);flex-shrink:0;}
 
-/* Score + checkouts side by side — FIXED HEIGHT container so layout never shifts */
-.score-checkout-row{display:flex;align-items:flex-start;gap:10px;flex-shrink:0;}
-/* Checkout column: fixed height = 3 rows × ~28px each */
+/* Score + checkouts side by side — FIXED HEIGHT, no border ever */
+.score-checkout-row{display:flex;align-items:flex-start;gap:10px;flex-shrink:0;border:none !important;outline:none !important;}
+.checkouts-col{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;height:88px;overflow:hidden;justify-content:flex-end;}
+.checkouts-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;flex-shrink:0;}
 .checkouts-wrap{
   flex:1;
-  height:88px; /* fixed: 3 routes × 28px + 2 gaps × 2px */
   display:flex;
   flex-direction:column;
   gap:3px;
   justify-content:flex-start;
   min-width:0;
-  padding-top:4px;
   overflow:hidden;
 }
 .co-box{display:flex;align-items:center;gap:6px;background:var(--surface);border-radius:7px;padding:5px 9px;border:1px solid var(--border);flex-shrink:0;height:27px;}
@@ -180,7 +179,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .co-tag{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);width:6px;flex-shrink:0;}
 .co-1 .co-tag{color:var(--accent);}
 .co-text{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* Empty slot — same height as a co-box */
 .co-empty{height:27px;flex-shrink:0;}
 
 /* ── FIXED BOTTOM BLOCK ── */
@@ -240,17 +238,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
 /* Players bar — auto grid, 1 row ≤3, 2 rows for 4+ */
 .players-bar{display:grid;border-bottom:1px solid var(--border);flex-shrink:0;}
-.player-tab{min-width:0;padding:8px 10px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);position:relative;transition:background .15s;}
+.player-tab{min-width:0;padding:10px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);position:relative;transition:background .15s;}
 .player-tab:last-child{border-bottom:none;}
 .player-tab.active-player{background:var(--surface2);}
-.player-tab.active-player::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);}
-.pt-score{font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;color:var(--text);margin-bottom:4px;}
+.player-tab.active-player::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--accent);}
+.pt-score{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;color:var(--text);margin-bottom:6px;}
 .active-player .pt-score{color:var(--accent);}
-.pt-stats-row{display:flex;gap:8px;align-items:center;}
-.pt-stat-block{display:flex;flex-direction:column;gap:2px;}
-.pt-stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
-.pt-stat-value{font-size:13px;font-weight:700;color:var(--text);}
-.pt-stat-sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.pt-stats-row{display:flex;flex-direction:column;gap:3px;}
+.pt-stat-line{display:flex;justify-content:space-between;align-items:center;}
+.pt-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.pt-stat-value{font-size:12px;font-weight:700;color:var(--text);}
 
 /* STATS OVERLAY */
 .stats-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:150;flex-direction:column;}
@@ -385,7 +382,10 @@ canvas.avg-chart{width:100%;display:block;}
     </div>
     <div class="score-checkout-row">
       <div class="current-score-big" id="current-score-big">501</div>
-      <div class="checkouts-wrap" id="checkouts-wrap"></div>
+      <div class="checkouts-col" id="checkouts-col">
+        <div class="checkouts-label" id="checkouts-label" style="display:none;">Possible checkouts</div>
+        <div class="checkouts-wrap" id="checkouts-wrap"></div>
+      </div>
     </div>
     <div class="bottom-block">
       <div class="score-input-row">
@@ -1199,11 +1199,9 @@ function renderGame(){
     const last=gs.lastScore[i]!==null?gs.lastScore[i]:'—';
     tab.innerHTML=`<div class="pt-score">${gs.scores[i]}</div>
       <div class="pt-stats-row">
-        <div class="pt-stat-block"><div class="pt-stat-label">Avg</div><div class="pt-stat-value">${avg}</div></div>
-        <div class="pt-stat-sep"></div>
-        <div class="pt-stat-block"><div class="pt-stat-label">Last</div><div class="pt-stat-value">${last}</div></div>
-        <div class="pt-stat-sep"></div>
-        <div class="pt-stat-block"><div class="pt-stat-label">Darts</div><div class="pt-stat-value">${st.dartsThrown}</div></div>
+        <div class="pt-stat-line"><span class="pt-stat-label">3-dart avg</span><span class="pt-stat-value">${avg}</span></div>
+        <div class="pt-stat-line"><span class="pt-stat-label">Last score</span><span class="pt-stat-value">${last}</span></div>
+        <div class="pt-stat-line"><span class="pt-stat-label">Darts thrown</span><span class="pt-stat-value">${st.dartsThrown}</span></div>
       </div>`;
     bar.appendChild(tab);
   });
@@ -1216,6 +1214,9 @@ function renderGame(){
   const typed=inputBuf?parseInt(inputBuf):0;
   const cos=getCheckouts(gs.scores[cp],typed);
   const wrap=document.getElementById('checkouts-wrap');wrap.innerHTML='';
+  const lbl=document.getElementById('checkouts-label');
+  const hasCheckouts=gs.scores[cp]>1&&gs.scores[cp]<=170&&cos.some(Boolean);
+  lbl.style.display=hasCheckouts?'block':'none';
   if(gs.scores[cp]>1&&gs.scores[cp]<=170){
     for(let i=0;i<3;i++){
       if(cos[i]){
