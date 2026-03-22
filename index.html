@@ -1112,6 +1112,21 @@ document.getElementById('win-undo-btn').addEventListener('click',()=>{
 });
 
 // Game settings modal
+const SETTINGS_KEY='darts_app_settings';
+function saveAppSettings(){
+  localStorage.setItem(SETTINGS_KEY,JSON.stringify({callerEnabled,showCheckout}));
+}
+function loadAppSettings(){
+  try{
+    const s=JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    if(s){
+      if(typeof s.callerEnabled==='boolean')callerEnabled=s.callerEnabled;
+      if(typeof s.showCheckout==='boolean')showCheckout=s.showCheckout;
+    }
+  }catch(e){}
+}
+loadAppSettings();
+
 document.getElementById('game-settings-btn').addEventListener('click',()=>{
   document.getElementById('caller-toggle').className='toggle'+(callerEnabled?' on':'');
   document.getElementById('toggle-checkout').className='toggle'+(showCheckout?' on':'');
@@ -1121,10 +1136,12 @@ document.getElementById('caller-toggle').addEventListener('click',function(){
   callerEnabled=!callerEnabled;
   this.className='toggle'+(callerEnabled?' on':'');
   if(!callerEnabled)_clearQueue();
+  saveAppSettings();
 });
 document.getElementById('toggle-checkout').addEventListener('click',function(){
   showCheckout=!showCheckout;
   this.className='toggle'+(showCheckout?' on':'');
+  saveAppSettings();
 });
 document.getElementById('game-settings-close').addEventListener('click',()=>{
   document.getElementById('game-settings-modal').classList.remove('open');
@@ -1478,8 +1495,8 @@ function renderStats(scope){
   tbl2.innerHTML=`<div class="st-head">
     <div class="st-th name-th">Player</div>
     <div class="st-th">171+</div>
-    <div class="st-th">134+</div>
-    <div class="st-th">97+</div>
+    <div class="st-th">133+</div>
+    <div class="st-th">95+</div>
     <div class="st-th">57+</div>
     <div class="st-th">40+</div>
     <div class="st-th" style="color:#ff8080;">&lt;40</div>
@@ -1516,9 +1533,9 @@ function drawChart(canvas,scope){
   const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
   const COLS=['#e8ff47','#44ff88','#ff6b35','#44aaff','#ff44aa','#cc44ff','#ffcc00','#ff4488'];
 
-  // Padding: top for visit labels, bottom for legend, left for y-axis, right margin
+  // Padding: top for visit labels, bottom for legend, left for y-axis, right margin for end labels
   const legH=players.length>1?18:0;
-  const pad={l:34,r:12,t:22,b:legH+8};
+  const pad={l:34,r:40,t:22,b:legH+8};
   const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
 
   // Collect data series
@@ -1548,13 +1565,14 @@ function drawChart(canvas,scope){
   // Visit number labels along the top (every Nth to avoid crowding)
   if(maxPts>1){
     const step=maxPts<=10?1:maxPts<=20?2:maxPts<=50?5:10;
-    ctx.fillStyle='#6b7080';ctx.font='9px DM Sans';ctx.textAlign='center';ctx.textBaseline='top';
+    ctx.fillStyle='#6b7080';ctx.font='9px DM Sans';ctx.textBaseline='top';
     for(let j=0;j<maxPts;j+=step){
-      if(j===0)continue;// skip 0
+      if(j===0)continue;
       const x=pad.l+(j/(maxPts-1))*cw;
+      // last label: right-align to avoid clipping
+      ctx.textAlign=j===maxPts-1?'right':'center';
       ctx.fillText(j+1,x,3);
     }
-    // axis label
     ctx.fillStyle='#444c5e';ctx.font='9px DM Sans';ctx.textAlign='left';ctx.textBaseline='top';
     ctx.fillText('Visit →',pad.l,3);
   }
@@ -1576,12 +1594,12 @@ function drawChart(canvas,scope){
     pts.forEach((p,j)=>j===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
     ctx.strokeStyle=s.col;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
 
-    // Last dot + value label
+    // Last dot + value label — always visible, clamp to right edge
     const last=pts[pts.length-1];
     ctx.fillStyle=s.col;ctx.beginPath();ctx.arc(last.x,last.y,4,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=s.col;ctx.font='bold 10px DM Sans';ctx.textAlign='left';ctx.textBaseline='bottom';
     const lastVal=s.data[s.data.length-1].toFixed(1);
-    ctx.fillText(lastVal,last.x+6,last.y+2);
+    ctx.fillStyle=s.col;ctx.font='bold 10px DM Sans';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText(lastVal,last.x+7,last.y);
   });
 
   // Legend at bottom
