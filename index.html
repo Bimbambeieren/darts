@@ -482,6 +482,8 @@ canvas.avg-chart{width:100%;display:block;}
       <div class="toggle on" id="toggle-checkout"></div>
     </div>
     <div id="caller-voice-name" style="font-size:10px;color:var(--muted);text-align:center;margin-top:-4px;min-height:14px;"></div>
+    <button id="show-voices-btn" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;padding:8px;cursor:pointer;margin-top:4px;">🔍 Show available voices</button>
+    <div id="voices-list" style="display:none;font-size:10px;color:var(--muted);margin-top:4px;max-height:120px;overflow-y:auto;background:var(--bg);border-radius:6px;padding:6px;"></div>
     <button class="modal-ok" id="game-settings-close" style="margin-top:10px;">Done</button>
   </div>
 </div>
@@ -1239,6 +1241,16 @@ document.getElementById('toggle-checkout').addEventListener('click',function(){
 });
 document.getElementById('game-settings-close').addEventListener('click',()=>{
   document.getElementById('game-settings-modal').classList.remove('open');
+});
+document.getElementById('show-voices-btn').addEventListener('click',()=>{
+  const vl=document.getElementById('voices-list');
+  if(vl.style.display==='block'){vl.style.display='none';return;}
+  const voices=window.speechSynthesis?window.speechSynthesis.getVoices():[];
+  const enVoices=voices.filter(v=>v.lang.startsWith('en'));
+  vl.innerHTML=enVoices.length
+    ?enVoices.map(v=>`<div style="padding:2px 0;border-bottom:1px solid var(--border);">${v.name} <span style="color:#555">(${v.lang})</span></div>`).join('')
+    :'<div>No voices found yet — try again in a moment.</div>';
+  vl.style.display='block';
 });
 
 function getTarget(){return settings.mode==='bestof'?Math.ceil(settings.count/2):settings.count;}
