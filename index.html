@@ -14,8 +14,8 @@
 <style>
 :root{--bg:#0e0f11;--surface:#16181c;--surface2:#1e2128;--border:#2a2d35;--accent:#e8ff47;--text:#f0f0f0;--muted:#6b7080;--danger:#ff4444;--green:#44ff88;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html{height:100%;}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100%;overflow-x:hidden;}
+html{height:100%;overscroll-behavior:none;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100%;overflow-x:hidden;overscroll-behavior:none;}
 /* Setup screen scrolls normally */
 #setup-screen{min-height:100vh;min-height:100dvh;overflow-y:auto;}
 .screen{display:none;flex-direction:column;}.screen.active{display:flex;}
