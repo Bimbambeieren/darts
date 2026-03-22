@@ -141,45 +141,44 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .sb-num{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--muted);flex-shrink:0;}
 .sb-active .sb-num{color:var(--accent);}
 .players-bar{display:grid;border-bottom:1px solid var(--border);flex-shrink:0;}
-.player-tab{min-width:0;padding:10px 12px 8px;border-right:1px solid var(--border);position:relative;transition:background .15s;}
+.player-tab{min-width:0;padding:14px 16px 12px;border-right:1px solid var(--border);position:relative;transition:background .15s;}
 .player-tab:last-child{border-right:none;}
 .player-tab.active-player{background:var(--surface2);}
 .player-tab.active-player::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--accent);}
-.pt-score{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,10vw,58px);line-height:1;color:var(--text);margin-bottom:5px;}
+.pt-score{font-family:'Bebas Neue',sans-serif;font-size:clamp(58px,15vw,80px);line-height:1;color:var(--text);margin-bottom:6px;}
 .active-player .pt-score{color:var(--accent);}
+.pt-name-row{font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:5px;}
+.active-player .pt-name-row{color:var(--accent);}
 .pt-stats-row{display:flex;flex-direction:column;gap:3px;}
 .pt-stat-line{display:flex;justify-content:space-between;align-items:center;}
-.pt-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.pt-stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
 .pt-stat-value{font-size:15px;font-weight:700;color:var(--text);}
-/* Throw area */
+/* Throw area — flex column, checkouts pinned to bottom */
 .throw-area{
   flex:1;
   display:flex;
   flex-direction:column;
-  padding:10px 12px 8px;
+  padding:0 12px 8px;
   padding-bottom:calc(40dvh + 73px);
-  gap:8px;
-  overflow-y:auto;
+  gap:4px;
+  overflow:hidden;
   min-height:0;
 }
-.bust-label{background:var(--danger);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;border-radius:6px;padding:3px 14px;display:none;align-self:flex-start;}
+.bust-label{background:var(--danger);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;border-radius:6px;padding:3px 14px;display:none;align-self:flex-start;margin-top:4px;}
 .bust-label.visible{display:block;}
-
-/* Score — large */
-.current-score-big{font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,15vw,90px);line-height:1;color:var(--text);flex-shrink:0;}
-
-/* Score + checkouts side by side — no fixed height, checkouts grow freely */
-.score-checkout-row{display:flex;align-items:flex-start;gap:10px;flex-shrink:0;border:none !important;outline:none !important;}
-.checkouts-col{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;}
-.checkouts-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);flex-shrink:0;}
-.checkouts-wrap{display:flex;flex-direction:column;gap:4px;min-width:0;}
-.co-box{display:flex;align-items:center;gap:6px;background:var(--surface);border-radius:7px;padding:6px 10px;border:1px solid var(--border);flex-shrink:0;}
+/* Spacer pushes checkouts to bottom */
+.throw-spacer{flex:1;}
+/* Checkouts vertical, each box grows equally to fill space */
+.checkouts-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;flex-shrink:0;}
+.checkouts-wrap{display:flex;flex-direction:column;gap:3px;flex:1;min-height:0;}
+.co-box{flex:1;display:flex;align-items:center;gap:6px;background:var(--surface);border-radius:7px;padding:4px 10px;border:1px solid var(--border);min-height:0;}
 .co-box.co-1{border-color:var(--accent);}
 .co-tag{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);width:6px;flex-shrink:0;}
 .co-1 .co-tag{color:var(--accent);}
 .co-text{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-
-/* Remaining preview — shown below big score, not in input row */
+/* Score — large (hidden, info now in players-bar) */
+.current-score-big{display:none;}
+/* Remaining preview */
 .remaining-preview{font-size:13px;color:var(--muted);flex-shrink:0;min-height:18px;}
 .remaining-preview .val{font-weight:700;color:var(--text);font-size:15px;}
 
@@ -366,17 +365,14 @@ canvas.avg-chart{width:100%;display:block;}
   <div class="score-board" id="score-board"></div>
   <div class="players-bar" id="players-bar"></div>
   <div class="throw-area">
-    <div class="score-checkout-row">
-      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
-        <div class="current-score-big" id="current-score-big">501</div>
-        <div class="remaining-preview" id="score-preview"></div>
-      </div>
-      <div class="checkouts-col" id="checkouts-col">
-        <div class="checkouts-label" id="checkouts-label" style="display:none;">Possible checkouts</div>
-        <div class="checkouts-wrap" id="checkouts-wrap"></div>
-      </div>
-    </div>
+    <div class="throw-spacer"></div>
     <span class="bust-label" id="bust-label">BUST!</span>
+    <div class="remaining-preview" id="score-preview"></div>
+    <div id="checkouts-col" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+      <div class="checkouts-label" id="checkouts-label" style="display:none;">Possible checkouts</div>
+      <div class="checkouts-wrap" id="checkouts-wrap"></div>
+    </div>
+    <div id="current-score-big" style="display:none;"></div>
   </div>
   <div class="bottom-block">
     <div class="score-input-row">
@@ -1226,7 +1222,7 @@ function renderGame(){
   document.getElementById('leg-sublabel').textContent=modeLabel;
   document.getElementById('undo-pad-btn').disabled=undoStack.length===0;
 
-  // Score board — name + legs won
+  // Score board — legs won only (name shown in players-bar below)
   const sb=document.getElementById('score-board');sb.innerHTML='';
   players.forEach((p,i)=>{
     const div=document.createElement('div');div.className='sb-player'+(i===cp?' sb-active':'');
@@ -1244,7 +1240,8 @@ function renderGame(){
     const st=gs.stats[i];
     const avg=st.dartsThrown>0?((st.totalScored/st.dartsThrown)*3).toFixed(1):'0.0';
     const last=gs.lastScore[i]!==null?gs.lastScore[i]:'—';
-    tab.innerHTML=`<div class="pt-score">${gs.scores[i]}</div>
+    tab.innerHTML=`
+      <div class="pt-score">${gs.scores[i]}</div>
       <div class="pt-stats-row">
         <div class="pt-stat-line"><span class="pt-stat-label">AVG</span><span class="pt-stat-value">${avg}</span></div>
         <div class="pt-stat-line"><span class="pt-stat-label">LAST</span><span class="pt-stat-value">${last}</span></div>
@@ -1253,7 +1250,6 @@ function renderGame(){
     bar.appendChild(tab);
   });
 
-  document.getElementById('current-score-big').textContent=gs.scores[cp];
   document.getElementById('bust-label').className='bust-label'+(gs.bust?' visible':'');
 
   // Checkouts — fixed-height container, always 3 slots
