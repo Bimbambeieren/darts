@@ -17,7 +17,9 @@
 html{height:100%;overscroll-behavior:none;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100%;overflow-x:hidden;overscroll-behavior:none;}
 /* Setup screen scrolls normally */
-#setup-screen{min-height:100vh;min-height:100dvh;overflow-y:auto;}
+#setup-screen{min-height:100vh;min-height:100dvh;overflow-y:auto;-webkit-user-select:none;user-select:none;}
+/* But inputs/textareas in setup still selectable */
+#setup-screen input,#setup-screen textarea{-webkit-user-select:text;user-select:text;}
 .screen{display:none;flex-direction:column;}.screen.active{display:flex;}
 
 /* Game screen: locked exactly to visible viewport, never scrolls */
@@ -860,6 +862,43 @@ let showCheckout=true;
 let players=[{name:'Player 1',handicap:null},{name:'Player 2',handicap:null}];
 let hcEditIdx=null;
 
+const SETUP_KEY='darts_setup_v1';
+function saveSetupSettings(){
+  try{localStorage.setItem(SETUP_KEY,JSON.stringify({
+    points:settings.points,mode:settings.mode,count:settings.count,unit:settings.unit,tld:settings.tld,
+    customPts:document.getElementById('pts-custom-input').value
+  }));}catch(e){}
+}
+function loadSetupSettings(){
+  try{
+    const s=JSON.parse(localStorage.getItem(SETUP_KEY));
+    if(!s)return;
+    // Points
+    settings.points=s.points||501;
+    settings.mode=s.mode||'bestof';
+    settings.count=s.count||5;
+    settings.unit=s.unit||'legs';
+    settings.tld=s.tld!==undefined?s.tld:true;
+    // Update UI
+    ['pts-301','pts-501','pts-custom'].forEach(id=>document.getElementById(id).classList.remove('active'));
+    if(s.points===301){document.getElementById('pts-301').classList.add('active');}
+    else if(s.points===501){document.getElementById('pts-501').classList.add('active');}
+    else{
+      document.getElementById('pts-custom').classList.add('active');
+      const inp=document.getElementById('pts-custom-input');
+      inp.style.display='block';inp.value=s.customPts||s.points;
+    }
+    document.getElementById('hc-instead').textContent=settings.points;
+    document.getElementById('bestof-btn').classList.toggle('active',settings.mode==='bestof');
+    document.getElementById('firstto-btn').classList.toggle('active',settings.mode==='firstto');
+    document.getElementById('legs-mode-btn').classList.toggle('active',settings.unit==='legs');
+    document.getElementById('sets-mode-btn').classList.toggle('active',settings.unit==='sets');
+    spinVal=settings.count;
+    document.getElementById('spin-val').textContent=spinVal;
+    document.getElementById('toggle-tld').classList.toggle('on',settings.tld);
+  }catch(e){}
+}
+
 function setPts(val){
   settings.points=val;
   document.getElementById('hc-instead').textContent=val;
@@ -868,10 +907,12 @@ function setPts(val){
 document.getElementById('pts-301').addEventListener('click',()=>{
   setPts(301);document.getElementById('pts-301').classList.add('active');
   document.getElementById('pts-custom-input').style.display='none';
+  saveSetupSettings();
 });
 document.getElementById('pts-501').addEventListener('click',()=>{
   setPts(501);document.getElementById('pts-501').classList.add('active');
   document.getElementById('pts-custom-input').style.display='none';
+  saveSetupSettings();
 });
 document.getElementById('pts-custom').addEventListener('click',()=>{
   document.getElementById('pts-custom').classList.add('active');
@@ -880,16 +921,19 @@ document.getElementById('pts-custom').addEventListener('click',()=>{
   inp.style.display='block';inp.focus();
   const v=parseInt(inp.value);
   if(!isNaN(v)&&v>=2){settings.points=v;document.getElementById('hc-instead').textContent=v;}
+  saveSetupSettings();
 });
 document.getElementById('pts-custom-input').addEventListener('input',function(){
   const v=parseInt(this.value);
   if(!isNaN(v)&&v>=2){settings.points=v;document.getElementById('hc-instead').textContent=v;}
+  saveSetupSettings();
 });
 ['bestof-btn','firstto-btn'].forEach(id=>{
   document.getElementById(id).addEventListener('click',()=>{
     document.getElementById('bestof-btn').classList.toggle('active',id==='bestof-btn');
     document.getElementById('firstto-btn').classList.toggle('active',id==='firstto-btn');
     settings.mode=id==='bestof-btn'?'bestof':'firstto';
+    saveSetupSettings();
   });
 });
 ['legs-mode-btn','sets-mode-btn'].forEach(id=>{
@@ -897,12 +941,13 @@ document.getElementById('pts-custom-input').addEventListener('input',function(){
     document.getElementById('legs-mode-btn').classList.toggle('active',id==='legs-mode-btn');
     document.getElementById('sets-mode-btn').classList.toggle('active',id==='sets-mode-btn');
     settings.unit=id==='legs-mode-btn'?'legs':'sets';
+    saveSetupSettings();
   });
 });
 let spinVal=5;
-document.getElementById('spin-up').addEventListener('click',()=>{spinVal=Math.min(21,spinVal+2);if(spinVal%2===0)spinVal++;document.getElementById('spin-val').textContent=spinVal;settings.count=spinVal;});
-document.getElementById('spin-down').addEventListener('click',()=>{spinVal=Math.max(1,spinVal-2);document.getElementById('spin-val').textContent=spinVal;settings.count=spinVal;});
-document.getElementById('toggle-tld').addEventListener('click',function(){settings.tld=!settings.tld;this.classList.toggle('on',settings.tld);});
+document.getElementById('spin-up').addEventListener('click',()=>{spinVal=Math.min(21,spinVal+2);if(spinVal%2===0)spinVal++;document.getElementById('spin-val').textContent=spinVal;settings.count=spinVal;saveSetupSettings();});
+document.getElementById('spin-down').addEventListener('click',()=>{spinVal=Math.max(1,spinVal-2);document.getElementById('spin-val').textContent=spinVal;settings.count=spinVal;saveSetupSettings();});
+document.getElementById('toggle-tld').addEventListener('click',function(){settings.tld=!settings.tld;this.classList.toggle('on',settings.tld);saveSetupSettings();});
 
 /* ═══════════════════════════════════════
    PLAYER LIST + DRAG
@@ -1007,6 +1052,7 @@ function loadLastPlayers(){
   }catch(e){}
 }
 loadLastPlayers();
+loadSetupSettings();
 
 function saveCurrentGame(){
   const saves=loadSaves();
