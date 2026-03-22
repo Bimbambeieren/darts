@@ -141,25 +141,21 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .sb-num{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--text);flex-shrink:0;}
 .sb-active .sb-num{color:var(--accent);}
 
-/* Throw area — fills space between players bar and fixed bottom block */
+/* Throw area — fills space between players bar and bottom-block */
 .throw-area{
   flex:1;
   display:flex;
   flex-direction:column;
-  padding:8px 10px 0;
-  gap:6px;
+  padding:10px 12px 8px;
+  gap:8px;
   overflow:hidden;
   min-height:0;
-  /* Leave room for fixed bottom block: numpad 40dvh + score-input 54px + padding ~20px */
-  padding-bottom:calc(40dvh + 74px);
 }
-.current-info{display:flex;align-items:baseline;gap:10px;flex-shrink:0;}
-.current-name{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--text);text-transform:uppercase;}
-.bust-label{background:var(--danger);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:16px;border-radius:6px;padding:2px 10px;display:none;}
-.bust-label.visible{display:inline-block;}
+.bust-label{background:var(--danger);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;border-radius:6px;padding:3px 14px;display:none;align-self:flex-start;}
+.bust-label.visible{display:block;}
 
-/* Score — always large, fixed size */
-.current-score-big{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,13vw,80px);line-height:1;color:var(--text);flex-shrink:0;}
+/* Score — large */
+.current-score-big{font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,15vw,90px);line-height:1;color:var(--text);flex-shrink:0;}
 
 /* Score + checkouts side by side — FIXED HEIGHT, no border ever */
 .score-checkout-row{display:flex;align-items:flex-start;gap:10px;flex-shrink:0;border:none !important;outline:none !important;}
@@ -242,12 +238,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .player-tab:last-child{border-bottom:none;}
 .player-tab.active-player{background:var(--surface2);}
 .player-tab.active-player::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--accent);}
-.pt-score{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;color:var(--text);margin-bottom:6px;}
+.pt-score{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,8vw,44px);line-height:1;color:var(--text);margin-bottom:6px;}
 .active-player .pt-score{color:var(--accent);}
 .pt-stats-row{display:flex;flex-direction:column;gap:3px;}
-.pt-stat-line{display:flex;justify-content:space-between;align-items:center;}
+.pt-stat-line{display:flex;justify-content:space-between;align-items:center;gap:4px;}
 .pt-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
-.pt-stat-value{font-size:12px;font-weight:700;color:var(--text);}
+.pt-stat-value{font-size:13px;font-weight:700;color:var(--text);}
 
 /* STATS OVERLAY */
 .stats-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:150;flex-direction:column;}
@@ -376,10 +372,6 @@ canvas.avg-chart{width:100%;display:block;}
   <div class="score-board" id="score-board"></div>
   <div class="players-bar" id="players-bar"></div>
   <div class="throw-area">
-    <div class="current-info">
-      <span class="current-name" id="current-name"></span>
-      <span class="bust-label" id="bust-label">BUST!</span>
-    </div>
     <div class="score-checkout-row">
       <div class="current-score-big" id="current-score-big">501</div>
       <div class="checkouts-col" id="checkouts-col">
@@ -387,29 +379,30 @@ canvas.avg-chart{width:100%;display:block;}
         <div class="checkouts-wrap" id="checkouts-wrap"></div>
       </div>
     </div>
-    <div class="bottom-block">
-      <div class="score-input-row">
-        <div class="score-entered" id="score-entered">—</div>
-        <div class="score-right">
-          <div class="score-preview-text" id="score-preview"></div>
-          <button class="inline-del" id="del-btn">⌫</button>
-        </div>
+    <span class="bust-label" id="bust-label">BUST!</span>
+  </div>
+  <div class="bottom-block">
+    <div class="score-input-row">
+      <div class="score-entered" id="score-entered">—</div>
+      <div class="score-right">
+        <div class="score-preview-text" id="score-preview"></div>
+        <button class="inline-del" id="del-btn">⌫</button>
       </div>
-      <div class="numpad">
-        <button class="np-btn" data-n="1">1</button>
-        <button class="np-btn" data-n="2">2</button>
-        <button class="np-btn" data-n="3">3</button>
-        <button class="np-btn" data-n="4">4</button>
-        <button class="np-btn" data-n="5">5</button>
-        <button class="np-btn" data-n="6">6</button>
-        <button class="np-btn" data-n="7">7</button>
-        <button class="np-btn" data-n="8">8</button>
-        <button class="np-btn" data-n="9">9</button>
-        <button class="np-btn undo-pad-btn" id="undo-pad-btn" disabled>↩ Undo</button>
-        <button class="np-btn" data-n="0">0</button>
-        <button class="np-btn miss-btn" id="miss-btn">MISS</button>
-        <button class="np-btn confirm-btn" id="confirm-btn" disabled>CONFIRM</button>
-      </div>
+    </div>
+    <div class="numpad">
+      <button class="np-btn" data-n="1">1</button>
+      <button class="np-btn" data-n="2">2</button>
+      <button class="np-btn" data-n="3">3</button>
+      <button class="np-btn" data-n="4">4</button>
+      <button class="np-btn" data-n="5">5</button>
+      <button class="np-btn" data-n="6">6</button>
+      <button class="np-btn" data-n="7">7</button>
+      <button class="np-btn" data-n="8">8</button>
+      <button class="np-btn" data-n="9">9</button>
+      <button class="np-btn undo-pad-btn" id="undo-pad-btn" disabled>↩ Undo</button>
+      <button class="np-btn" data-n="0">0</button>
+      <button class="np-btn miss-btn" id="miss-btn">MISS</button>
+      <button class="np-btn confirm-btn" id="confirm-btn" disabled>CONFIRM</button>
     </div>
   </div>
 </div>
@@ -1199,14 +1192,13 @@ function renderGame(){
     const last=gs.lastScore[i]!==null?gs.lastScore[i]:'—';
     tab.innerHTML=`<div class="pt-score">${gs.scores[i]}</div>
       <div class="pt-stats-row">
-        <div class="pt-stat-line"><span class="pt-stat-label">3-dart avg</span><span class="pt-stat-value">${avg}</span></div>
-        <div class="pt-stat-line"><span class="pt-stat-label">Last score</span><span class="pt-stat-value">${last}</span></div>
-        <div class="pt-stat-line"><span class="pt-stat-label">Darts thrown</span><span class="pt-stat-value">${st.dartsThrown}</span></div>
+        <div class="pt-stat-line"><span class="pt-stat-label">AVG</span><span class="pt-stat-value">${avg}</span></div>
+        <div class="pt-stat-line"><span class="pt-stat-label">LAST</span><span class="pt-stat-value">${last}</span></div>
+        <div class="pt-stat-line"><span class="pt-stat-label">DARTS</span><span class="pt-stat-value">${st.dartsThrown}</span></div>
       </div>`;
     bar.appendChild(tab);
   });
 
-  document.getElementById('current-name').textContent=players[cp].name;
   document.getElementById('current-score-big').textContent=gs.scores[cp];
   document.getElementById('bust-label').className='bust-label'+(gs.bust?' visible':'');
 
