@@ -181,8 +181,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .inline-del:hover{color:var(--danger);border-color:var(--danger);}
 .inline-del:active{transform:scale(.93);}
 
-/* Numpad — no gaps, separated by thin lines only */
-.numpad{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);gap:0;min-height:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+/* Numpad — FIXED height ~40% of viewport, never changes size */
+.numpad{
+  height:40vh;height:40dvh;
+  flex-shrink:0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(4,1fr);
+  gap:0;
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+}
 .np-btn{background:var(--surface);border:none;border-right:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:clamp(16px,4vw,22px);font-weight:600;padding:0;cursor:pointer;text-align:center;transition:background .1s;touch-action:manipulation;display:flex;align-items:center;justify-content:center;}
 .np-btn:nth-child(3n){border-right:none;}
 .np-btn:nth-last-child(-n+3):not(.confirm-btn){border-bottom:none;}
@@ -193,6 +203,20 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .np-btn.confirm-btn{grid-column:span 3;background:var(--accent);border:none;border-top:1px solid var(--border);color:#0e0f11;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.1em;font-weight:900;}
 .np-btn.confirm-btn:hover{background:#d4eb00;}
 .np-btn.confirm-btn:disabled{background:var(--surface2);color:var(--muted);cursor:default;transform:none;}
+
+/* Players bar — auto grid, 1 row ≤3, 2 rows for 4+ */
+.players-bar{display:grid;border-bottom:1px solid var(--border);flex-shrink:0;}
+.player-tab{min-width:0;padding:5px 7px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);position:relative;transition:background .15s;}
+.player-tab:last-child{border-bottom:none;}
+.player-tab.active-player{background:var(--surface2);}
+.player-tab.active-player::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);}
+.pt-score{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;color:var(--text);margin-bottom:2px;}
+.active-player .pt-score{color:var(--accent);}
+.pt-stats-row{display:flex;gap:4px;align-items:center;}
+.pt-stat-block{display:flex;flex-direction:column;gap:0;}
+.pt-stat-label{font-size:7px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.pt-stat-value{font-size:10px;font-weight:700;color:var(--text);}
+.pt-stat-sep{width:1px;height:14px;background:var(--border);flex-shrink:0;}
 
 /* STATS OVERLAY */
 .stats-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:150;flex-direction:column;}
@@ -1097,7 +1121,8 @@ function startGame(){
 function renderGame(){
   const cp=gs.cpIdx;
   document.getElementById('leg-display').textContent=settings.unit==='sets'?`Set ${gs.currentSet} · Leg ${gs.currentLeg}`:`Leg ${gs.currentLeg}`;
-  document.getElementById('leg-sublabel').textContent=settings.points;
+  const modeLabel=(settings.mode==='bestof'?'Best of':'First to')+' '+settings.count+' '+(settings.unit==='sets'?'sets':'legs');
+  document.getElementById('leg-sublabel').textContent=modeLabel;
   document.getElementById('undo-pad-btn').disabled=undoStack.length===0;
 
   // Score board — name + legs won number, no dots
@@ -1109,8 +1134,10 @@ function renderGame(){
     sb.appendChild(div);
   });
 
-  // Players bar
+  // Players bar — 1 row for ≤3 players, 2 rows (2 cols) for 4+
   const bar=document.getElementById('players-bar');bar.innerHTML='';
+  const cols=players.length<=3?players.length:2;
+  bar.style.gridTemplateColumns=`repeat(${cols},1fr)`;
   players.forEach((p,i)=>{
     const tab=document.createElement('div');tab.className='player-tab'+(i===cp?' active-player':'');
     const st=gs.stats[i];
