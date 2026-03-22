@@ -1,45 +1,48 @@
-const CACHE = 'darts-v1';
-
-// Core files to cache for offline use
-// Sounds are NOT pre-cached (too many) but will be cached on first play
-const CORE = [
-  '/darts/index.html',
-  '/darts/manifest.json',
-  'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap'
-];
+const CACHE = 'darts-v3';
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE)
-      .then(cache => cache.addAll(CORE))
-      .then(() => self.skipWaiting())
-  );
+  // Take over immediately without waiting
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
+  // Delete ALL old caches
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
-      ))
+      .then(keys => Promise.all(keys.map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
-// Cache-first for everything: HTML, MP3s, fonts
 self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+
+  // MP3 sound files: cache-first (they never change)
+  if (url.pathname.includes('/sounds/')) {
+    e.respondWith(
+      caches.open(CACHE).then(cache =>
+        cache.match(e.request).then(cached => {
+          if (cached) return cached;
+          return fetch(e.request).then(response => {
+            cache.put(e.request, response.clone());
+            return response;
+          });
+        })
+      )
+    );
+    return;
+  }
+
+  // Everything else (index.html, manifest, fonts): network-first
+  // Always try to get the latest version, fall back to cache if offline
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(response => {
-        // Cache valid responses (skip chrome-extension etc.)
-        if (!response || response.status !== 200 || response.type === 'opaque') {
-          return response;
-        }
+    fetch(e.request)
+      .then(response => {
+        // Save fresh copy in cache
         const clone = response.clone();
         caches.open(CACHE).then(cache => cache.put(e.request, clone));
         return response;
-      }).catch(() => cached); // offline fallback
-    })
+      })
+      .catch(() => caches.match(e.request)) // offline fallback
   );
 });
