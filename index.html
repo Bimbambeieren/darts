@@ -678,44 +678,22 @@ function _playNext(){
   _playing=true;
   const item=_queue.shift();
 
-  // Keys starting with __name__ are always spoken via TTS (player names have no MP3)
-  if(item.key.startsWith('__name__')){
-    _fallback(item);
-    return;
-  }
+  // Player names and __tts__ keys always via TTS
+  if(item.key.startsWith('__name__')||item.key.startsWith('__tts__')){_fallback(item);return;}
 
-  const src=`sounds/${item.key}.mp3`;
+  const src=`sounds/${item.key}.wav`;
   const audio=_getAudio(item.key);
-  audio.src=src;
-  audio.oncanplaythrough=null;
-  audio.onerror=null;
-
-  // Try MP3 first
   const tryMP3=()=>{
-    audio.currentTime=0;
-    const playPromise=audio.play();
-    if(playPromise){
-      playPromise.then(()=>{
-        audio.onended=()=>{audio.onended=null;_playNext();};
-      }).catch(()=>_fallback(item));
-    } else {
-      audio.onended=()=>{audio.onended=null;_playNext();};
-    }
+    audio.src=src;audio.currentTime=0;
+    const p=audio.play();
+    if(p){p.then(()=>{audio.onended=()=>{audio.onended=null;_playNext();};}).catch(()=>_fallback(item));}
+    else{audio.onended=()=>{audio.onended=null;_playNext();};}
   };
-
-  // Test if MP3 exists (load with timeout)
-  const tester=new Audio();
-  let resolved=false;
-  const done=(useMp3)=>{
-    if(resolved)return; resolved=true;
-    tester.src=''; tester.onerror=null; tester.oncanplaythrough=null;
-    if(useMp3) tryMP3(); else _fallback(item);
-  };
-  tester.onerror=()=>done(false);
-  tester.oncanplaythrough=()=>done(true);
-  tester.src=src;
-  tester.load();
-  setTimeout(()=>done(false),400); // 400ms timeout → fallback
+  const tester=new Audio();let resolved=false;
+  const done=(ok)=>{if(resolved)return;resolved=true;tester.src='';tester.onerror=null;tester.oncanplaythrough=null;if(ok)tryMP3();else _fallback(item);};
+  tester.onerror=()=>done(false);tester.oncanplaythrough=()=>done(true);
+  tester.src=src;tester.load();
+  setTimeout(()=>done(false),400);
 }
 
 function _fallback(item){
@@ -754,21 +732,14 @@ let _speechVoice=null;
   const pick=()=>{
     const v=window.speechSynthesis.getVoices();
     if(!v.length)return;
-    // Priority order — best darts caller voices first:
-    // 1. Google Neural2 UK male (deep, authoritative)
-    // 2. Google UK male voices
-    // 3. Known deep UK males (Daniel, George)
-    // 4. Any en-GB voice
-    // 5. Any English voice
-    _speechVoice =
+    // Try to find en-GB / en_GB voice — Samsung uses lang codes like 'en_GB'
+    _speechVoice=
+      v.find(x=>x.lang==='en_GB') ||
+      v.find(x=>x.lang==='en-GB') ||
       v.find(x=>x.name==='Google UK English Male') ||
       v.find(x=>/Neural2-B/i.test(x.name)&&x.lang.startsWith('en')) ||
-      v.find(x=>/Neural2-D/i.test(x.name)&&x.lang.startsWith('en')) ||
-      v.find(x=>/Neural2/i.test(x.name)&&x.lang==='en-GB') ||
-      v.find(x=>/Neural2/i.test(x.name)&&x.lang.startsWith('en')) ||
+      v.find(x=>/Neural2/i.test(x.name)&&(x.lang==='en_GB'||x.lang==='en-GB')) ||
       v.find(x=>/daniel|george/i.test(x.name)&&x.lang.startsWith('en')) ||
-      v.find(x=>x.lang==='en-GB'&&!x.name.toLowerCase().includes('female')) ||
-      v.find(x=>x.lang==='en-GB') ||
       v.find(x=>x.lang.startsWith('en'))||null;
   };
   pick();
@@ -812,29 +783,32 @@ function speak(event, fallbackText='', pitch=1, rate=0.9){
 // "Game on"
 function speakGameOn(){ _enqueue('gameon','Game on',1.1,0.9); }
 
-// "Bust"
-function speakBust(){ _enqueue('bust','Bust',0.9,0.85); }
+// Bust — no WAV, use TTS
+function speakBust(){ _enqueue('__tts__bust','Bust',0.9,0.85); }
 
-// "And the winner of the Nth leg is... [name]! Wins!"
-// Uses: leg_N.mp3 (or gameshot fallback) + wins.mp3
+// Leg win: "1st / 2nd / 3rd / [number]th leg" + name (TTS) + score (WAV)
 function speakLegWin(playerName, legNum){
-  const legKey=`leg_${legNum}`;
-  const legFallback=`And the winner of the ${ordinal(legNum)} leg is`;
-  _enqueue(legKey, legFallback, 1.3, 0.92);
-  // Player name — no MP3 for names, always fallback TTS
+  // Ordinal WAV: only 1st, 2nd, 3rd available
+  const ordKeys={1:'1st',2:'2nd',3:'3rd'};
+  const ordKey=ordKeys[legNum]||null;
+  if(ordKey){
+    _enqueue(ordKey, `${ordinal(legNum)} leg`, 1.3, 0.92);
+  } else {
+    _enqueue('__tts__leg',`${ordinal(legNum)} leg`, 1.3, 0.92);
+  }
+  // Player name always TTS
   _enqueue(`__name__${playerName}`, playerName, 1.3, 0.92);
-  _enqueue('wins', 'wins! Brilliant!', 1.5, 0.95);
 }
 
-// "X wins! Brilliant!" — match over
+// Match win — TTS only
 function speakMatchWin(playerName){
   _enqueue(`__name__${playerName}`, playerName, 1.6, 0.95);
-  _enqueue('wins', 'wins! Brilliant!', 1.6, 0.95);
+  _enqueue('__tts__wins','wins! Brilliant!', 1.6, 0.95);
 }
 
-// "You require X"
+// "You require X" — no WAV, use TTS then score WAV
 function speakRequireScore(score){
-  _enqueue('you_require',`You require`,1.05,0.88);
+  _enqueue('__tts__require',`You require`,1.05,0.88);
   _enqueue(_scoreKey(score),n2w(score),1.05,0.88);
 }
 
