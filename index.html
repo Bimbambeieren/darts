@@ -160,22 +160,21 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   flex:1;
   display:flex;
   flex-direction:column;
-  padding:8px 12px;
-  padding-bottom:calc(40dvh + 73px);
-  gap:5px;
+  padding:6px 0 calc(40dvh + 73px);
+  gap:4px;
   overflow:hidden;
   min-height:0;
 }
 .bust-label{background:var(--danger);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;border-radius:6px;padding:3px 14px;display:none;align-self:flex-start;flex-shrink:0;}
 .bust-label.visible{display:block;}
 .throw-spacer{display:none;}
-.checkouts-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);line-height:1.4;text-align:center;}
+.checkouts-label{display:none;}
 .checkouts-wrap{display:flex;flex-direction:column;gap:5px;min-height:0;width:fit-content;}
-.co-box{flex:1;display:flex;align-items:center;gap:6px;background:var(--surface);border-radius:10px;padding:6px 16px 6px 10px;border:1.5px solid var(--accent);min-height:36px;width:100%;white-space:nowrap;}
-.co-box.co-1{border-color:var(--accent);}
-.co-tag{font-size:9px;letter-spacing:.1em;color:var(--muted);flex-shrink:0;}
-.co-1 .co-tag{color:var(--accent);}
-.co-text{font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--text);white-space:nowrap;}
+.player-co-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 4px;border-right:1px solid var(--border);}
+.player-co-col:last-child{border-right:none;}
+.player-co-col.active-co{background:rgba(232,255,71,.04);border-radius:8px;}
+.co-box{display:inline-flex;align-items:center;justify-content:center;background:transparent;border-radius:8px;padding:5px 10px;border:1.5px solid var(--accent);white-space:nowrap;}
+.co-text{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text);white-space:nowrap;letter-spacing:.03em;}
 .current-score-big{display:none;}
 /* Remaining preview — right side, large */
 .remaining-preview{font-size:12px;color:var(--muted);text-align:center;line-height:1.3;}
@@ -365,17 +364,7 @@ canvas.avg-chart{width:100%;display:block;}
   <div class="players-bar" id="players-bar"></div>
   <div class="throw-area">
     <span class="bust-label" id="bust-label">BUST!</span>
-    <div style="flex:1;display:flex;gap:0;min-height:0;align-items:center;">
-      <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:0 8px;">
-        <div class="checkouts-label" id="checkouts-label" style="display:none;">POSSIBLE<br>CHECKOUTS</div>
-      </div>
-      <div id="checkouts-col" style="flex:0 0 auto;display:flex;flex-direction:column;min-height:0;justify-content:center;gap:5px;">
-        <div class="checkouts-wrap" id="checkouts-wrap"></div>
-      </div>
-      <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:0 8px;">
-        <div class="remaining-preview" id="score-preview"></div>
-      </div>
-    </div>
+    <div id="all-checkouts-row" style="display:flex;width:100%;gap:0;min-height:0;flex:1;align-items:flex-start;padding-top:4px;"></div>
     <div id="current-score-big" style="display:none;"></div>
   </div>
   <div class="bottom-block">
@@ -1233,6 +1222,7 @@ function startGame(){
   cancelRequire();inputBuf='';undoStack=[];
   gs={
     cpIdx:0,
+    legOpener:0,
     scores:players.map(p=>p.handicap!==null?p.handicap:settings.points),
     lastScore:players.map(()=>null),
     legsWon:players.map(()=>0),setsWon:players.map(()=>0),
@@ -1271,49 +1261,48 @@ function renderGame(){
   bar.style.gridTemplateColumns=`repeat(${cols},1fr)`;
   players.forEach((p,i)=>{
     const tab=document.createElement('div');tab.className='player-tab'+(i===cp?' active-player':'');
-    const st=gs.stats[i];
-    const avg=st.dartsThrown>0?((st.totalScored/st.dartsThrown)*3).toFixed(1):'0.0';
+    const lst=gs.legStats[i];
+    const avg=lst.dartsThrown>0?((lst.totalScored/lst.dartsThrown)*3).toFixed(1):'0.0';
     const last=gs.lastScore[i]!==null?gs.lastScore[i]:'—';
     tab.innerHTML=`
       <div class="pt-score">${gs.scores[i]}</div>
       <div class="pt-stats-row">
         <div class="pt-stat-line"><span class="pt-stat-label">AVG</span><span class="pt-stat-value">${avg}</span></div>
         <div class="pt-stat-line"><span class="pt-stat-label">LAST</span><span class="pt-stat-value">${last}</span></div>
-        <div class="pt-stat-line"><span class="pt-stat-label">DARTS</span><span class="pt-stat-value">${st.dartsThrown}</span></div>
+        <div class="pt-stat-line"><span class="pt-stat-label">DARTS</span><span class="pt-stat-value">${lst.dartsThrown}</span></div>
       </div>`;
     bar.appendChild(tab);
   });
 
   document.getElementById('bust-label').className='bust-label'+(gs.bust?' visible':'');
 
-  // Checkouts — fixed-height container, always 3 slots
+  // Checkouts — one column per player, aligned under their score panel
   const typed=inputBuf?parseInt(inputBuf):0;
-  const cos=getCheckouts(gs.scores[cp],typed);
-  const wrap=document.getElementById('checkouts-wrap');wrap.innerHTML='';
-  const lbl=document.getElementById('checkouts-label');
-  const hasCheckouts=gs.scores[cp]>1&&gs.scores[cp]<=170&&cos.some(Boolean);
-  lbl.style.display=hasCheckouts?'block':'none';
-  if(gs.scores[cp]>1&&gs.scores[cp]<=170){
-    for(let i=0;i<3;i++){
-      if(cos[i]){
-        const box=document.createElement('div');box.className='co-box'+(i===0?' co-1':'');
-        box.innerHTML=`<span class="co-tag">▸</span><span class="co-text">${cos[i]}</span>`;
-        wrap.appendChild(box);
-      } else {
-        const empty=document.createElement('div');empty.className='co-empty';wrap.appendChild(empty);
+  const allCoRow=document.getElementById('all-checkouts-row');allCoRow.innerHTML='';
+  players.forEach((p,i)=>{
+    const col=document.createElement('div');
+    col.className='player-co-col'+(i===cp?' active-co':'');
+    const score=gs.scores[i];
+    if(score>1&&score<=170){
+      const cos=getCheckouts(score, i===cp?typed:0);
+      if(cos.some(Boolean)){
+        for(let j=0;j<3;j++){
+          if(cos[j]){
+            const box=document.createElement('div');
+            box.className='co-box'+(j===0?' co-1':'');
+            // Active player gets accent styling, others get muted
+            if(i!==cp){box.style.borderColor='var(--border)';box.style.opacity='0.55';}
+            box.innerHTML=`<span class="co-text">${cos[j]}</span>`;
+            col.appendChild(box);
+          }
+        }
       }
     }
-  }
+    allCoRow.appendChild(col);
+  });
 
   // Score display
   document.getElementById('score-entered').textContent=inputBuf||'—';
-  const prev=document.getElementById('score-preview');
-  if(inputBuf){
-    const n=parseInt(inputBuf),rem=gs.scores[cp]-n;
-    if(rem>0)prev.innerHTML=`Remaining<span class="val">${rem}</span>`;
-    else if(rem===0)prev.innerHTML=`<span style="color:var(--green);font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;">CHECKOUT ✓</span>`;
-    else prev.innerHTML=`<span style="color:var(--danger);font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;">BUST</span>`;
-  }else prev.innerHTML='';
   document.getElementById('confirm-btn').disabled=!inputBuf;
   saveSession();
 }
@@ -1434,7 +1423,8 @@ function winLeg(cp,checkoutScore){
   gs.legStats=players.map(()=>mkLegSt());
   gs.scores=players.map(p=>p.handicap!==null?p.handicap:settings.points);
   gs.visitCount=players.map(()=>0);
-  gs.cpIdx=(gs.cpIdx+1)%players.length;
+  gs.legOpener=(gs.legOpener+1)%players.length;
+  gs.cpIdx=gs.legOpener;
   renderGame();
 }
 
